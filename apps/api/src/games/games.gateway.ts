@@ -82,7 +82,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.to(host[0]).emit(SOCKET_EVENTS.ROLE_ASSIGNED, { role: Role.Host });
       }
     } else {
-      client.emit(SOCKET_EVENTS.ERROR, { message: 'Cannot start game. Need 3 players and must be Room Host.' });
+      client.emit(SOCKET_EVENTS.ERROR, { message: 'Cannot start game. Need at least 4 players (1 Host + 3 Players).' });
     }
   }
 

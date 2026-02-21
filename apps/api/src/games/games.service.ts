@@ -47,7 +47,7 @@ export class GamesService {
 
   assignRoles(code: string, requesterId: string): { room: RoomState, roles: Record<string, Role> } | null {
     const room = this.rooms.get(code);
-    if (!room || room.players.length < 3) return null; // Need at least 3 players
+    if (!room || room.players.length < 4) return null; // Need at least 4 players (1 Host + 3 Players)
     if (room.roomHostId !== requesterId) return null; // Only Room Host can start
 
     room.status = RoomStatus.WORD_SETTING;

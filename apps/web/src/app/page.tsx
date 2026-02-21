@@ -297,10 +297,10 @@ function GameLobby() {
                 {useGameStore.getState().socketId === room.roomHostId ? (
                   <button 
                     onClick={startGame}
-                    disabled={room.players.length < 3}
+                    disabled={room.players.length < 4}
                     className="w-full max-w-xs bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl transition-colors uppercase tracking-widest shadow-lg shadow-green-900/20"
                   >
-                    {room.players.length < 3 ? 'Waiting (min 3)' : 'Start Game'}
+                    {room.players.length < 4 ? 'Waiting (min 4)' : 'Start Game'}
                   </button>
                 ) : (
                   <div className="w-full max-w-xs bg-slate-800/50 text-slate-400 border border-slate-800 font-bold text-sm py-4 rounded-xl text-center uppercase tracking-widest">
