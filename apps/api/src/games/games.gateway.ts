@@ -38,7 +38,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
 
-    const result = this.gamesService.leaveRoom(client.id);
+    const result = this.gamesService.leaveRoom(client.id, false);
     if (result && 'code' in result && result.code === null) {
       // Room was deleted because the host left, notify everyone in that room
       if (currentRoomCode) {
@@ -65,7 +65,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
 
-    const result = this.gamesService.leaveRoom(client.id);
+    const result = this.gamesService.leaveRoom(client.id, true);
     if (result && 'code' in result && result.code === null) {
       if (currentRoomCode) {
          this.server.to(currentRoomCode).emit(SOCKET_EVENTS.ROOM_DELETED);

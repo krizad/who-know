@@ -36,6 +36,7 @@ export class GamesService {
       // User is reconnecting - update their socket ID
       const oldSocketId = existingPlayer.socketId;
       existingPlayer.socketId = user.socketId;
+      existingPlayer.connected = true;
       
       // If they were the host, we must update the roomHostId
       if (room.roomHostId === oldSocketId) {
@@ -62,6 +63,7 @@ export class GamesService {
         ...user,
         score: 0,
         roomId: room.id,
+        connected: true,
       });
     }
 
@@ -69,20 +71,27 @@ export class GamesService {
     return room;
   }
 
-  leaveRoom(clientId: string): RoomState | null | { code: null } {
+  leaveRoom(clientId: string, explicitLeave: boolean = false): RoomState | null | { code: null } {
     for (const [code, room] of this.rooms.entries()) {
       const playerIndex = room.players.findIndex(p => p.socketId === clientId);
       if (playerIndex !== -1) {
-        // If the Room Host leaves, destroy the entire room
+        // If the Room Host leaves explicitly or in lobby, destroy the entire room
         if (room.roomHostId === clientId) {
-          this.rooms.delete(code);
-          this.secretWords.delete(code);
-          return { code: null }; // special return to indicate the room was deleted entirely
+          if (explicitLeave || room.status === RoomStatus.LOBBY) {
+            this.rooms.delete(code);
+            this.secretWords.delete(code);
+            return { code: null }; // special return to indicate the room was deleted entirely
+          }
         }
 
-        room.players.splice(playerIndex, 1);
+        if (explicitLeave || room.status === RoomStatus.LOBBY) {
+          room.players.splice(playerIndex, 1);
+        } else {
+          room.players[playerIndex].connected = false;
+        }
         
-        if (room.players.length === 0) {
+        const activePlayers = room.players.filter(p => p.connected !== false).length;
+        if (activePlayers === 0) {
           this.rooms.delete(code);
           this.secretWords.delete(code);
           return null;
@@ -227,8 +236,8 @@ export class GamesService {
     // Register vote
     room.votes[voterId] = targetId;
 
-    // Check if everyone (except the Host) has voted
-    const playingCount = room.players.filter(p => p.role !== Role.Host).length;
+    // Check if everyone (except the Host and disconnected players) has voted
+    const playingCount = room.players.filter(p => p.role !== Role.Host && p.connected !== false).length;
     const votesCast = Object.keys(room.votes).length;
 
     if (votesCast >= playingCount) {
