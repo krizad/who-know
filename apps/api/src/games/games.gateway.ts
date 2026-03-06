@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GamesService } from './games.service';
-import { SOCKET_EVENTS, RoomState, RoomStatus, Role, GameType, TicTacToeCell } from '@repo/types';
+import { SOCKET_EVENTS, RoomState, RoomStatus, Role, GameType, RPSChoice } from '@repo/types';
 
 @WebSocketGateway({
   cors: {
@@ -282,6 +282,48 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ) {
     const room = this.gamesService.tttReset(data.code, client.id);
+    if (room) {
+      this.server.to(room.code).emit(SOCKET_EVENTS.ROOM_STATE_UPDATED, room);
+      this.server.emit(SOCKET_EVENTS.AVAILABLE_ROOMS_UPDATED, this.gamesService.getAvailableRooms());
+    } else {
+      client.emit(SOCKET_EVENTS.ERROR, { message: 'Not authorized to reset game.' });
+    }
+  }
+
+  // --- RPS Actions ---
+
+  @SubscribeMessage(SOCKET_EVENTS.RPS_NEXT_ROUND)
+  handleRPSNextRound(
+    @MessageBody() data: { code: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const room = this.gamesService.rpsNextRound(data.code, client.id);
+    if (room) {
+      this.server.to(room.code).emit(SOCKET_EVENTS.ROOM_STATE_UPDATED, room);
+    } else {
+      client.emit(SOCKET_EVENTS.ERROR, { message: 'Not authorized or slot already taken.' });
+    }
+  }
+
+  @SubscribeMessage(SOCKET_EVENTS.RPS_MAKE_CHOICE)
+  handleRPSMakeChoice(
+    @MessageBody() data: { code: string; choice: RPSChoice },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const room = this.gamesService.rpsMakeChoice(data.code, client.id, data.choice);
+    if (room) {
+      this.server.to(room.code).emit(SOCKET_EVENTS.ROOM_STATE_UPDATED, room);
+    } else {
+      client.emit(SOCKET_EVENTS.ERROR, { message: 'Invalid choice or not your turn.' });
+    }
+  }
+
+  @SubscribeMessage(SOCKET_EVENTS.RPS_RESET)
+  handleRPSReset(
+    @MessageBody() data: { code: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const room = this.gamesService.rpsReset(data.code, client.id);
     if (room) {
       this.server.to(room.code).emit(SOCKET_EVENTS.ROOM_STATE_UPDATED, room);
       this.server.emit(SOCKET_EVENTS.AVAILABLE_ROOMS_UPDATED, this.gamesService.getAvailableRooms());

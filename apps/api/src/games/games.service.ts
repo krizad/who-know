@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RoomState, RoomStatus, Role, UserState, GameType, TicTacToeCell } from '@repo/types';
+import { RoomState, RoomStatus, Role, UserState, GameType, TicTacToeCell, RPSChoice } from '@repo/types';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -19,7 +19,9 @@ export class GamesService {
       createdAt: new Date(),
       config: {
         hostSelection: 'ROUND_ROBIN',
-        timerMin: 5
+        timerMin: 5,
+        rpsBestOf: 3,
+        rpsMode: '1V1_ROUND_ROBIN'
       }
     };
 
@@ -27,6 +29,13 @@ export class GamesService {
       room.ticTacToeState = {
         board: Array(9).fill(null),
         currentTurn: "X"
+      };
+    } else if (gameType === GameType.RPS) {
+      room.rpsState = {
+        activePlayers: [],
+        queue: [],
+        choices: {},
+        scores: {},
       };
     }
 
@@ -136,6 +145,33 @@ export class GamesService {
     const room = this.rooms.get(code);
     if (!room || room.players.length < 4) return null; // Need at least 4 players (1 Host + 3 Players)
     if (room.roomHostId !== requesterId) return null; // Only Room Host can start
+
+    // Handling RPS auto-start logic
+    if (room.gameType === GameType.RPS) {
+      if (!room.rpsState) return null;
+      
+      room.status = RoomStatus.PLAYING;
+      
+      const allPlayerIds = room.players.map(p => p.socketId);
+      
+      if (room.config.rpsMode === "ALL_AT_ONCE") {
+        room.rpsState.activePlayers = [...allPlayerIds];
+        room.rpsState.queue = [];
+      } else {
+        // 1V1 config
+        room.rpsState.activePlayers = allPlayerIds.slice(0, 2);
+        room.rpsState.queue = allPlayerIds.slice(2);
+      }
+      
+      room.rpsState.choices = {};
+      room.rpsState.scores = {};
+      allPlayerIds.forEach(id => room.rpsState!.scores[id] = 0);
+      room.rpsState.gameWinner = undefined;
+      room.rpsState.roundWinner = undefined;
+
+      this.rooms.set(code, room);
+      return { room, roles: {} }; // RPS doesn't use these specific hidden roles
+    }
 
     room.status = RoomStatus.WORD_SETTING;
     
@@ -441,6 +477,161 @@ export class GamesService {
     if (previousWinner === "DRAW") {
       room.ticTacToeState.currentTurn = "X";
     }
+
+    this.rooms.set(code, room);
+    return room;
+  }
+
+  // --- RPS Logic ---
+
+  rpsMakeChoice(code: string, clientId: string, choice: RPSChoice): RoomState | null {
+    const room = this.rooms.get(code);
+    if (!room || room.gameType !== GameType.RPS || room.status !== RoomStatus.PLAYING) return null;
+
+    const rps = room.rpsState;
+    if (!rps || rps.gameWinner) return null;
+
+    if (!rps.activePlayers.includes(clientId)) return null; // Only active players can choose
+
+    // Record choice
+    rps.choices[clientId] = choice;
+
+    // Check if everyone active has chosen
+    const allChosen = rps.activePlayers.every(id => !!rps.choices[id]);
+
+    if (allChosen) {
+      if (room.config.rpsMode === "ALL_AT_ONCE") {
+        this.resolveAllAtOnceRound(room);
+      } else {
+        this.resolve1v1Round(room);
+      }
+      
+      // Check for Game Winner based on BestOf
+      const bestOf = room.config.rpsBestOf || 3;
+      const targetScore = Math.floor(bestOf / 2) + 1;
+      
+      const gameWinners = Object.entries(rps.scores)
+        .filter(([_, score]) => score >= targetScore)
+        .map(([id, _]) => id);
+        
+      if (gameWinners.length > 0) {
+        rps.gameWinner = gameWinners.length === 1 ? gameWinners[0] : gameWinners;
+      }
+      
+      room.status = RoomStatus.RESULT;
+    }
+
+    this.rooms.set(code, room);
+    return room;
+  }
+
+  private resolve1v1Round(room: RoomState) {
+    const rps = room.rpsState!;
+    const [p1, p2] = rps.activePlayers;
+    const c1 = rps.choices[p1];
+    const c2 = rps.choices[p2];
+
+    if (c1 === c2) {
+      rps.roundWinner = "DRAW";
+    } else if (
+      (c1 === "ROCK" && c2 === "SCISSORS") ||
+      (c1 === "PAPER" && c2 === "ROCK") ||
+      (c1 === "SCISSORS" && c2 === "PAPER")
+    ) {
+      rps.roundWinner = p1;
+      rps.scores[p1] = (rps.scores[p1] || 0) + 1;
+      
+      // Rotate loser to back of queue
+      if (rps.queue.length > 0) {
+        rps.queue.push(p2);
+        rps.activePlayers[1] = rps.queue.shift()!;
+      }
+    } else {
+      rps.roundWinner = p2;
+      rps.scores[p2] = (rps.scores[p2] || 0) + 1;
+      
+      // Rotate loser to back of queue
+      if (rps.queue.length > 0) {
+        rps.queue.push(p1);
+        rps.activePlayers[0] = rps.queue.shift()!;
+      }
+    }
+  }
+
+  private resolveAllAtOnceRound(room: RoomState) {
+    const rps = room.rpsState!;
+    const choicesList = Object.values(rps.choices);
+    
+    const hasRock = choicesList.includes("ROCK");
+    const hasPaper = choicesList.includes("PAPER");
+    const hasScissors = choicesList.includes("SCISSORS");
+    
+    // Draw if all 3 are played, or only 1 type is played
+    if ((hasRock && hasPaper && hasScissors) || 
+        (!hasRock && !hasPaper) || 
+        (!hasRock && !hasScissors) || 
+        (!hasPaper && !hasScissors)) {
+      rps.roundWinner = "DRAW";
+      return;
+    }
+    
+    // Determine the winning symbol
+    let winningSymbol: RPSChoice;
+    if (hasRock && hasScissors) winningSymbol = "ROCK";
+    else if (hasScissors && hasPaper) winningSymbol = "SCISSORS";
+    else winningSymbol = "PAPER"; // hasRock && hasPaper
+    
+    // Award points
+    const winners: string[] = [];
+    Object.entries(rps.choices).forEach(([id, choice]) => {
+      if (choice === winningSymbol) {
+        winners.push(id);
+        rps.scores[id] = (rps.scores[id] || 0) + 1;
+      }
+    });
+    
+    rps.roundWinner = winners;
+  }
+
+  rpsNextRound(code: string, clientId: string): RoomState | null {
+    const room = this.rooms.get(code);
+    if (!room || room.gameType !== GameType.RPS || room.status !== RoomStatus.RESULT) return null;
+    if (!room.rpsState) return null;
+    
+    // Host or an active player can click next
+    if (room.roomHostId !== clientId && !room.rpsState.activePlayers.includes(clientId)) {
+      return null;
+    }
+
+    if (room.rpsState.gameWinner) {
+      return this.rpsReset(code, clientId);
+    }
+
+    room.rpsState.choices = {};
+    room.status = RoomStatus.PLAYING;
+    this.rooms.set(code, room);
+    return room;
+  }
+
+  rpsReset(code: string, clientId: string): RoomState | null {
+    const room = this.rooms.get(code);
+    if (!room || room.gameType !== GameType.RPS || room.status !== RoomStatus.RESULT) return null;
+
+    // Only allow players who are in the room or host to reset
+    if (room.roomHostId !== clientId && !room.players.some(p => p.socketId === clientId)) {
+      return null;
+    }
+
+    room.status = RoomStatus.LOBBY;
+    room.rpsState = {
+      activePlayers: [],
+      queue: [],
+      choices: {},
+      scores: {}
+    };
+
+    // wipe global scores for standard presentation
+    room.players.forEach(p => p.score = 0);
 
     this.rooms.set(code, room);
     return room;

@@ -27,6 +27,9 @@ interface GameState {
   tttJoinSide: (side: "X" | "O") => void;
   tttMakeMove: (index: number) => void;
   tttReset: () => void;
+  rpsMakeChoice: (choice: "ROCK" | "PAPER" | "SCISSORS") => void;
+  rpsNextRound: () => void;
+  rpsReset: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -203,6 +206,27 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { socket, room } = get();
     if (socket && room) {
       socket.emit(SOCKET_EVENTS.TTT_RESET, { code: room.code });
+    }
+  },
+
+  rpsNextRound: () => {
+    const { socket, room } = get();
+    if (socket && room) {
+      socket.emit(SOCKET_EVENTS.RPS_NEXT_ROUND, { code: room.code });
+    }
+  },
+
+  rpsMakeChoice: (choice: "ROCK" | "PAPER" | "SCISSORS") => {
+    const { socket, room } = get();
+    if (socket && room) {
+      socket.emit(SOCKET_EVENTS.RPS_MAKE_CHOICE, { code: room.code, choice });
+    }
+  },
+
+  rpsReset: () => {
+    const { socket, room } = get();
+    if (socket && room) {
+      socket.emit(SOCKET_EVENTS.RPS_RESET, { code: room.code });
     }
   }
 }));

@@ -251,6 +251,158 @@ function TicTacToeView() {
   );
 }
 
+function RPSView() {
+  const { room, socketId, rpsMakeChoice, rpsNextRound } = useGameStore();
+
+  if (!room || !room.rpsState) return null;
+  const rps = room.rpsState;
+
+  const isMyTurn = rps.activePlayers.includes(socketId);
+  const mySideIndex = rps.activePlayers.indexOf(socketId);
+
+  const bestOf = room.config.rpsBestOf || 3;
+  const targetScore = Math.floor(bestOf / 2) + 1;
+
+  const getEmoji = (choice: string | null) => {
+    if (choice === "ROCK") return "✊";
+    if (choice === "PAPER") return "✋";
+    if (choice === "SCISSORS") return "✌️";
+    return "?";
+  };
+
+  const renderActivePlayer = (playerId: string | undefined, index: number) => {
+    if (!playerId) return null;
+    const player = room.players.find(p => p.socketId === playerId);
+    if (!player) return null;
+    
+    const choice = rps.choices[playerId];
+    const score = rps.scores[playerId] || 0;
+    const isWinner = room.status === RoomStatus.RESULT && (
+      rps.gameWinner?.includes(playerId) || rps.roundWinner?.includes(playerId)
+    );
+
+    return (
+      <div key={`active-${playerId}`} className={`flex flex-col items-center transition-all ${mySideIndex !== -1 && mySideIndex !== index ? "opacity-50" : ""} ${isWinner ? "scale-110" : ""}`}>
+        <span className={`font-black text-2xl ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-orange-400' : 'text-indigo-400'}`}>P{index + 1}</span>
+        <span className="text-slate-300 font-medium text-sm text-center truncate max-w-[100px]">{player.name}</span>
+        <span className={`font-mono text-xs mt-1 px-2 py-0.5 rounded-md border shadow-inner ${index === 0 ? 'text-amber-300 bg-amber-950/50 border-amber-900/50' : index === 1 ? 'text-orange-300 bg-orange-950/50 border-orange-900/50' : 'text-indigo-300 bg-indigo-950/50 border-indigo-900/50'}`}>
+          {score} / {targetScore}
+        </span>
+        {room.status === RoomStatus.RESULT && choice && (
+          <div className={`mt-4 p-4 rounded-3xl border-4 ${isWinner ? (index === 0 ? "border-amber-500 bg-amber-900/20 shadow-[0_0_30px_rgba(245,158,11,0.3)] animate-bounce" : index === 1 ? "border-orange-500 bg-orange-900/20 shadow-[0_0_30px_rgba(249,115,22,0.3)] animate-bounce" : "border-indigo-500 bg-indigo-900/20 shadow-[0_0_30px_rgba(99,102,241,0.3)] animate-bounce") : rps.roundWinner === "DRAW" ? "border-slate-500 bg-slate-800" : "border-slate-800 bg-slate-900 opacity-50"}`}>
+            <span className="text-5xl sm:text-7xl">{getEmoji(choice)}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className="flex flex-col items-center gap-6 w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative">
+        
+        {/* Header */}
+        <div className="flex justify-between w-full items-center px-2 sm:px-4 mb-4">
+          <div className="text-xs font-bold text-slate-400 bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
+            {room.config.rpsMode === 'ALL_AT_ONCE' ? 'ALL AT ONCE' : '1V1 ROUND ROBIN'}
+          </div>
+          <div className="text-sm font-black tracking-widest uppercase text-slate-500 bg-slate-950 px-3 py-1 rounded-full border border-slate-800 shadow-inner">
+            {room.status === RoomStatus.RESULT ? (rps.gameWinner ? "Match Over" : "Round Over") : "Playing"}
+          </div>
+          <div className="text-xs font-bold text-amber-500 bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
+            FIRST TO {targetScore}
+          </div>
+        </div>
+
+        {/* Players / Arena */}
+        {room.config.rpsMode === "ALL_AT_ONCE" ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 w-full items-end justify-center min-h-[150px]">
+            {rps.activePlayers.map((id, idx) => renderActivePlayer(id, idx))}
+          </div>
+        ) : (
+          <div className="flex justify-between w-full items-end min-h-[150px] px-2 sm:px-10">
+            {renderActivePlayer(rps.activePlayers[0], 0)}
+            {room.status === RoomStatus.RESULT && (
+              <div className="hidden sm:block text-4xl font-black text-slate-600 italic px-4 pb-10">VS</div>
+            )}
+            {renderActivePlayer(rps.activePlayers[1], 1)}
+          </div>
+        )}
+
+        {/* Playing Controls */}
+        {room.status === RoomStatus.PLAYING && (
+          <div className="w-full flex flex-col items-center gap-6 mt-8">
+            {!isMyTurn ? (
+              <div className="text-2xl font-black text-slate-500 uppercase tracking-widest bg-slate-950 px-8 py-4 rounded-2xl border border-slate-800">
+                Spectating...
+              </div>
+            ) : rps.choices[socketId] ? (
+              <div className="text-2xl font-black text-amber-500 animate-pulse text-center bg-amber-950/30 px-8 py-4 rounded-2xl border border-amber-900/50">
+                Choice locked!<br/>
+                <span className="text-base text-amber-500/50 mt-2 block">Waiting for opponent...</span>
+              </div>
+            ) : (
+              <div className="flex gap-4">
+                {(["ROCK", "PAPER", "SCISSORS"] as const).map(choice => (
+                  <button
+                    key={choice}
+                    onClick={() => rpsMakeChoice(choice)}
+                    className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-800 hover:bg-slate-700 rounded-2xl flex items-center justify-center text-5xl sm:text-6xl transition-all hover:scale-105 active:scale-95 border-2 border-slate-700 hover:border-amber-500 shadow-xl"
+                  >
+                    {getEmoji(choice)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Results & Transitions */}
+        {room.status === RoomStatus.RESULT && (
+          <div className="flex flex-col items-center gap-6 animate-in zoom-in slide-in-from-bottom-4 w-full mt-4">
+            
+            {/* Announcement */}
+            {rps.roundWinner === "DRAW" ? (
+              <div className="text-2xl sm:text-3xl font-black text-slate-400 bg-slate-800 px-6 py-2 rounded-2xl border-2 border-slate-600 shadow-lg">It's a Draw!</div>
+            ) : rps.gameWinner ? (
+              <div className="text-3xl sm:text-4xl font-black px-8 py-4 rounded-2xl border-2 shadow-2xl text-amber-400 bg-amber-950 border-amber-500 animate-pulse text-center">
+                🏆 {Array.isArray(rps.gameWinner) ? rps.gameWinner.map(id => room.players.find(p => p.socketId === id)?.name).join(", ") : room.players.find(p => p.socketId === rps.gameWinner)?.name} Wins the Match! 🏆
+              </div>
+            ) : (
+              <div className="text-2xl sm:text-3xl font-black px-6 py-2 rounded-2xl border-2 shadow-lg text-indigo-400 bg-indigo-950/50 border-indigo-500/50">
+                {Array.isArray(rps.roundWinner) ? rps.roundWinner.map(id => room.players.find(p => p.socketId === id)?.name).join(", ") : room.players.find(p => p.socketId === rps.roundWinner)?.name} Wins the Round!
+              </div>
+            )}
+            
+            {(room.roomHostId === socketId || isMyTurn) && (
+              <button onClick={rpsNextRound} className={`font-bold px-10 py-4 rounded-xl mt-2 transition-all shadow-lg active:scale-95 text-lg uppercase tracking-wider ${rps.gameWinner ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}>
+                {rps.gameWinner ? 'Play Again' : 'Next Round'}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 1V1 Queue Display */}
+        {room.config.rpsMode === "1V1_ROUND_ROBIN" && rps.queue.length > 0 && (
+          <div className="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-full hidden lg:flex flex-col gap-2">
+            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-2">Queue</h4>
+            {rps.queue.map((id, idx) => {
+              const p = room.players.find(p => p.socketId === id);
+              if (!p) return null;
+              return (
+                <div key={`queue-${id}`} className="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-sm font-medium text-slate-300 shadow-lg flex items-center justify-between min-w-[120px]">
+                   <span className="truncate max-w-[80px]">{p.name}</span>
+                   <span className="text-[10px] text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded ml-2">#{idx + 1}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function GameLobby() {
   const { connect, connected, room, myName, setName, createRoom, joinRoom, startGame, myRole, leaveRoom, availableRooms } = useGameStore();
   const searchParams = useSearchParams();
@@ -343,7 +495,7 @@ function GameLobby() {
               <input type="text" value={myName} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium" placeholder="Enter your name" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <button onClick={() => createRoom(GameType.WHO_KNOW)} disabled={!myName} className="w-full bg-indigo-600/80 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg border border-indigo-500/50 flex flex-col items-center justify-center gap-1 group">
                 <span className="text-xl group-hover:scale-110 transition-transform">🕵️</span>
                 <span className="text-xs tracking-wider">Who Know!</span>
@@ -353,6 +505,11 @@ function GameLobby() {
                 <span className="text-xs tracking-wider">Tic Tac Toe</span>
               </button>
             </div>
+            
+            <button onClick={() => createRoom(GameType.RPS)} disabled={!myName} className="w-full bg-amber-600/80 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg border border-amber-500/50 flex flex-col items-center justify-center gap-1 group">
+              <span className="text-xl group-hover:scale-110 transition-transform">✌️✊✋</span>
+              <span className="text-xs tracking-wider">Hand Duel</span>
+            </button>
 
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-slate-800"></div>
@@ -408,8 +565,8 @@ function GameLobby() {
                     <div>
                       <div className="text-slate-200 font-bold font-mono tracking-widest text-lg leading-none mb-1 group-hover:text-indigo-300 transition-colors flex items-center gap-2">
                         {r.code}
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded border leading-none ml-2 tracking-normal font-sans ${r.gameType === GameType.TIC_TAC_TOE ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
-                          {r.gameType === GameType.TIC_TAC_TOE ? "TIC-TAC-TOE" : "WHO KNOW"}
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded border leading-none ml-2 tracking-normal font-sans ${r.gameType === GameType.TIC_TAC_TOE ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : r.gameType === GameType.RPS ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
+                          {r.gameType === GameType.TIC_TAC_TOE ? "TIC-TAC-TOE" : r.gameType === GameType.RPS ? "HAND DUEL" : "WHO KNOW"}
                         </span>
                       </div>
                       <div className="text-slate-500 text-[10px] font-medium uppercase mt-0.5 tracking-wider flex items-center gap-1.5">
@@ -448,7 +605,7 @@ function GameLobby() {
             <img src="/icon.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-sm border border-slate-700" />
             <div className="flex flex-col">
               <span className="text-xs font-black tracking-widest text-slate-500 uppercase leading-none mb-0.5 hidden sm:block">
-               {room.gameType === GameType.TIC_TAC_TOE ? "Tic Tac Toe" : "Who Know"}
+               {room.gameType === GameType.TIC_TAC_TOE ? "Tic Tac Toe" : room.gameType === GameType.RPS ? "Hand Duel" : "Who Know"}
               </span>
               <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-indigo-400 leading-none">{room.code}</span>
             </div>
@@ -498,7 +655,7 @@ function GameLobby() {
         </header>
 
         {/* Role Section at Top */}
-        {myRole && room.gameType !== GameType.TIC_TAC_TOE && (
+        {myRole && room.gameType === GameType.WHO_KNOW && (
           <div className="flex-none w-full relative z-0">
             <RoleCard role={myRole} word={useGameStore.getState().secretWord} />
           </div>
@@ -507,6 +664,8 @@ function GameLobby() {
         {/* Main Content Area */}
         {room.gameType === GameType.TIC_TAC_TOE ? (
           <TicTacToeView />
+        ) : room.gameType === GameType.RPS && room.status !== RoomStatus.LOBBY ? (
+          <RPSView />
         ) : (
           <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-2 sm:gap-4">
             {/* Left: Players Table */}
@@ -566,46 +725,96 @@ function GameLobby() {
 
                 {/* Configuration Panel */}
                 <div className="w-full max-w-sm bg-slate-950/50 border border-slate-800 rounded-xl p-4 space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Host Selection</label>
-                    {useGameStore.getState().socketId === room.roomHostId ? (
-                      <select value={room.config?.hostSelection || "ROUND_ROBIN"} onChange={(e) => useGameStore.getState().updateConfig({ hostSelection: e.target.value as any })} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
-                        <option value="ROUND_ROBIN">Round Robin</option>
-                        <option value="RANDOM">Random</option>
-                        <option value="FIXED">Room Creator (Fixed)</option>
-                      </select>
-                    ) : (
-                      <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.hostSelection === "ROUND_ROBIN" ? "Round Robin" : room.config?.hostSelection === "RANDOM" ? "Random" : "Room Creator (Fixed)"}</div>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Timer (Minutes)</label>
-                    {useGameStore.getState().socketId === room.roomHostId ? (
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={room.config?.timerMin === undefined ? 5 : room.config?.timerMin}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          useGameStore.getState().updateConfig({ timerMin: val === "" ? ("" as any) : parseInt(val) });
-                        }}
-                        onBlur={() => {
-                          if (!room.config?.timerMin) {
-                            useGameStore.getState().updateConfig({ timerMin: 5 });
-                          }
-                        }}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                      />
-                    ) : (
-                      <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.timerMin || 5} Minutes</div>
-                    )}
-                  </div>
+                  {room.gameType === GameType.WHO_KNOW && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Host Selection</label>
+                        {useGameStore.getState().socketId === room.roomHostId ? (
+                          <select value={room.config?.hostSelection || "ROUND_ROBIN"} onChange={(e) => useGameStore.getState().updateConfig({ hostSelection: e.target.value as any })} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none">
+                            <option value="ROUND_ROBIN">Round Robin</option>
+                            <option value="RANDOM">Random</option>
+                            <option value="FIXED">Room Creator (Fixed)</option>
+                          </select>
+                        ) : (
+                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.hostSelection === "ROUND_ROBIN" ? "Round Robin" : room.config?.hostSelection === "RANDOM" ? "Random" : "Room Creator (Fixed)"}</div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Timer (Minutes)</label>
+                        {useGameStore.getState().socketId === room.roomHostId ? (
+                          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={room.config?.timerMin === undefined ? 5 : room.config?.timerMin}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              useGameStore.getState().updateConfig({ timerMin: val === "" ? ("" as any) : parseInt(val) });
+                            }}
+                            onBlur={() => {
+                              if (!room.config?.timerMin) {
+                                useGameStore.getState().updateConfig({ timerMin: 5 });
+                              }
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                          />
+                        ) : (
+                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.timerMin || 5} Minutes</div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {room.gameType === GameType.RPS && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mode</label>
+                        {useGameStore.getState().socketId === room.roomHostId ? (
+                          <select
+                            value={room.config?.rpsMode || "1V1_ROUND_ROBIN"}
+                            onChange={(e) => {
+                              useGameStore.getState().updateConfig({ rpsMode: e.target.value as any });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none"
+                          >
+                            <option value="1V1_ROUND_ROBIN">1v1 Round Robin</option>
+                            <option value="ALL_AT_ONCE">All At Once</option>
+                          </select>
+                        ) : (
+                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">
+                            {room.config?.rpsMode === 'ALL_AT_ONCE' ? 'All At Once' : '1v1 Round Robin'}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Score (Best Of)</label>
+                        {useGameStore.getState().socketId === room.roomHostId ? (
+                          <select
+                            value={room.config?.rpsBestOf || 3}
+                            onChange={(e) => {
+                              useGameStore.getState().updateConfig({ rpsBestOf: parseInt(e.target.value) });
+                            }}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none"
+                          >
+                            <option value={1}>BO1 (First to 1)</option>
+                            <option value={3}>BO3 (First to 2)</option>
+                            <option value={5}>BO5 (First to 3)</option>
+                            <option value={7}>BO7 (First to 4)</option>
+                          </select>
+                        ) : (
+                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">
+                            Best of {room.config?.rpsBestOf || 3}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {useGameStore.getState().socketId === room.roomHostId ? (
-                  <button onClick={startGame} disabled={room.players.length < 4} className="w-full max-w-xs bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl transition-colors uppercase tracking-widest shadow-lg shadow-green-900/20">
-                    {room.players.length < 4 ? "Waiting (min 4)" : "Start Game"}
+                  <button onClick={startGame} disabled={room.players.length < (room.gameType === GameType.WHO_KNOW ? 4 : 2)} className="w-full max-w-xs bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl transition-colors uppercase tracking-widest shadow-lg shadow-green-900/20">
+                    {room.players.length < (room.gameType === GameType.WHO_KNOW ? 4 : 2) ? `Waiting (min ${room.gameType === GameType.WHO_KNOW ? 4 : 2})` : "Start Game"}
                   </button>
                 ) : (
                   <div className="w-full max-w-xs bg-slate-800/50 text-slate-400 border border-slate-800 font-bold text-sm py-4 rounded-xl text-center uppercase tracking-widest">Waiting for Room Host to start</div>
@@ -776,7 +985,7 @@ function GameLobby() {
         )}
 
         {/* Phase Footer */}
-        {room.status !== RoomStatus.LOBBY && room.gameType !== GameType.TIC_TAC_TOE && (
+        {room.status !== RoomStatus.LOBBY && room.gameType === GameType.WHO_KNOW && (
           <footer className="flex-none p-2 sm:p-3 bg-slate-900 border border-slate-800 rounded-xl text-center shadow-xl flex items-center justify-center gap-2 sm:gap-3 w-full">
             <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Phase</span>
             <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-full text-[10px] sm:text-xs font-black tracking-widest">{room.status === "WORD_SETTING" ? "SECRET WORD SELECTION" : room.status.replace("_", " ")}</span>

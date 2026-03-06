@@ -10,6 +10,7 @@ export enum RoomStatus {
 export enum GameType {
   WHO_KNOW = "WHO_KNOW",
   TIC_TAC_TOE = "TIC_TAC_TOE",
+  RPS = "RPS",
 }
 
 export enum Role {
@@ -42,6 +43,10 @@ export const SOCKET_EVENTS = {
   TTT_JOIN_SIDE: "ttt_join_side",
   TTT_MAKE_MOVE: "ttt_make_move",
   TTT_RESET: "ttt_reset",
+  // RPS specific events
+  RPS_NEXT_ROUND: "rps_next_round",
+  RPS_MAKE_CHOICE: "rps_make_choice",
+  RPS_RESET: "rps_reset",
 } as const;
 
 export type TicTacToeCell = "X" | "O" | null;
@@ -53,6 +58,17 @@ export interface TicTacToeState {
   currentTurn: "X" | "O";
   winner?: "X" | "O" | "DRAW";
   winningLine?: number[]; // indices of the winning line
+}
+
+export type RPSChoice = "ROCK" | "PAPER" | "SCISSORS";
+
+export interface RPSState {
+  activePlayers: string[]; // socketIds
+  queue: string[]; // socketIds waiting their turn
+  choices: Record<string, RPSChoice>; // socketId -> Choice
+  scores: Record<string, number>; // socketId -> Wins
+  roundWinner?: string | string[]; // Can be "DRAW", or a single P1 ID, or an array of winning IDs
+  gameWinner?: string | string[]; // Overall winner(s) ID
 }
 
 export interface UserState {
@@ -69,6 +85,8 @@ export interface UserState {
 export interface RoomConfig {
   hostSelection: "ROUND_ROBIN" | "RANDOM" | "FIXED";
   timerMin: number;
+  rpsBestOf?: number; // e.g., 1, 3, 5
+  rpsMode?: "1V1_ROUND_ROBIN" | "ALL_AT_ONCE";
 }
 
 export interface RoomState {
@@ -84,6 +102,7 @@ export interface RoomState {
   winner?: WinningTeam;
   config: RoomConfig;
   ticTacToeState?: TicTacToeState;
+  rpsState?: RPSState;
 }
 
 export interface AvailableRoom {
