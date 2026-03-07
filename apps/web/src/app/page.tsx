@@ -14,6 +14,7 @@ import { TicTacToeView } from "@/components/games/tic-tac-toe/TicTacToeView";
 import { RPSView } from "@/components/games/rps/RPSView";
 import { WhoKnowView } from "@/components/games/who-know/WhoKnowView";
 import { GobblerView } from "@/components/games/gobbler/GobblerView";
+import { useTranslate } from "@/hooks/useTranslate";
 
 // Components extracted to separate files
 
@@ -21,6 +22,7 @@ function GameLobby() {
   const { connect, connected, room, myName, setName, createRoom, joinRoom, startGame, myRole, leaveRoom, availableRooms } = useGameStore();
   const searchParams = useSearchParams();
   const roomQuery = searchParams.get("room");
+  const { t, language, setLanguage } = useTranslate();
 
   const [joinCode, setJoinCode] = useState(roomQuery || "");
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -30,10 +32,27 @@ function GameLobby() {
     connect();
   }, [connect]);
 
+  const LanguageSwitcher = () => (
+    <div className="flex gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50 backdrop-blur-sm z-50">
+      <button
+        onClick={() => setLanguage('en')}
+        className={`px-2 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all ${language === 'en' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
+      >
+        EN
+      </button>
+      <button
+        onClick={() => setLanguage('th')}
+        className={`px-2 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all ${language === 'th' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
+      >
+        TH
+      </button>
+    </div>
+  );
+
   if (!connected) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-6 md:p-24 bg-slate-950">
-        <h1 className="text-4xl font-bold animate-pulse text-slate-400">Connecting...</h1>
+        <h1 className="text-4xl font-bold animate-pulse text-slate-400">{t('lobby.connecting')}</h1>
       </main>
     );
   }
@@ -42,6 +61,9 @@ function GameLobby() {
     if (roomQuery) {
       return (
         <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-slate-950 text-slate-200 relative">
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+            <LanguageSwitcher />
+          </div>
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
             <RulesModal />
           </div>
@@ -50,14 +72,14 @@ function GameLobby() {
             <div className="flex justify-center mb-4 mt-2">
               <img src="/icon.png" alt="WHO KNOW? Logo" className="w-20 h-20 rounded-2xl shadow-lg shadow-indigo-500/20 border border-slate-700" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-center mb-2 tracking-tighter text-white">You've been invited!</h1>
+            <h1 className="text-3xl sm:text-4xl font-black text-center mb-2 tracking-tighter text-white">{t('lobby.invited')}</h1>
             <p className="text-center text-slate-400 mb-8 font-medium">
-              Join room <span className="text-indigo-400 font-mono font-bold">{roomQuery.toUpperCase()}</span>
+              {t('lobby.joinRoomInfo')} <span className="text-indigo-400 font-mono font-bold">{roomQuery.toUpperCase()}</span>
             </p>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">Display Name</label>
+                <label className="block text-sm font-medium text-slate-400 mb-2">{t('lobby.displayName')}</label>
                 <input
                   type="text"
                   value={myName}
@@ -68,13 +90,13 @@ function GameLobby() {
                     }
                   }}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-center text-lg shadow-inner"
-                  placeholder="Enter your name to play"
+                  placeholder={t('lobby.enterNamePlaceholder')}
                   autoFocus
                 />
               </div>
 
               <button onClick={() => joinRoom(joinCode)} disabled={!myName || joinCode.length < 4} className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xl py-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98]">
-                Enter Game
+                {t('lobby.enterGame')}
               </button>
 
               <button
@@ -84,7 +106,7 @@ function GameLobby() {
                 }}
                 className="w-full text-slate-500 hover:text-slate-300 font-medium text-sm transition-colors py-2"
               >
-                Or create your own room
+                {t('lobby.createOwnRoom')}
               </button>
             </div>
           </div>
@@ -94,6 +116,9 @@ function GameLobby() {
 
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6 bg-slate-950 text-slate-200 relative">
+        <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+          <LanguageSwitcher />
+        </div>
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
           <RulesModal />
         </div>
@@ -101,18 +126,18 @@ function GameLobby() {
           <div className="flex justify-center mb-6">
             <img src="/icon.png" alt="WHO KNOW? Logo" className="w-24 h-24 sm:w-28 sm:h-28 rounded-[2rem] shadow-2xl shadow-indigo-500/20 border border-slate-700" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-center mb-8 tracking-tighter bg-gradient-to-br from-indigo-400 to-purple-500 bg-clip-text text-transparent">GAME LOBBY</h1>
+          <h1 className="text-4xl sm:text-5xl font-black text-center mb-8 tracking-tighter bg-gradient-to-br from-indigo-400 to-purple-500 bg-clip-text text-transparent">{t('lobby.gameLobbyTitle')}</h1>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Display Name</label>
-              <input type="text" value={myName} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium" placeholder="Enter your name" />
+              <label className="block text-sm font-medium text-slate-400 mb-2">{t('lobby.displayName')}</label>
+              <input type="text" value={myName} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium" placeholder={t('lobby.enterNameShort')} />
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button onClick={() => createRoom(GameType.WHO_KNOW)} disabled={!myName} className="w-full bg-indigo-600/80 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg border border-indigo-500/50 flex flex-col items-center justify-center gap-1 group">
                 <span className="text-xl group-hover:scale-110 transition-transform">🕵️</span>
-                <span className="text-xs tracking-wider">Who Know!</span>
+                <span className="text-xs tracking-wider text-center px-1">{t('lobby.gameNames.whoKnow')}</span>
               </button>
               <button onClick={() => createRoom(GameType.GOBBLER_TIC_TAC_TOE)} disabled={!myName} className="w-full bg-blue-600/80 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg border border-blue-500/50 flex flex-col items-center justify-center gap-1 group">
                 <div className="flex items-end justify-center gap-1.5 group-hover:scale-110 transition-transform h-7">
@@ -120,24 +145,24 @@ function GameLobby() {
                   <span className="text-sm leading-none mb-0.5">❌⭕️</span>
                   <span className="text-xl leading-none">❌⭕️</span>
                 </div>
-                <span className="text-xs tracking-wider">Gobbler Tic Tac Toe</span>
+                <span className="text-xs tracking-wider text-center px-1">{t('lobby.gameNames.gobbler')}</span>
               </button>
             </div>
             
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button onClick={() => createRoom(GameType.TIC_TAC_TOE)} disabled={!myName} className="w-full bg-zinc-600/80 hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg border border-zinc-500/50 flex flex-col items-center justify-center gap-1 group">
                 <span className="text-xl group-hover:scale-110 transition-transform">❌⭕️</span>
-                <span className="text-xs tracking-wider">Classic Tic Tac Toe</span>
+                <span className="text-xs tracking-wider text-center px-1">{t('lobby.gameNames.ticTacToe')}</span>
               </button>
               <button onClick={() => createRoom(GameType.RPS)} disabled={!myName} className="w-full bg-amber-600/80 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors shadow-lg border border-amber-500/50 flex flex-col items-center justify-center gap-1 group">
                 <span className="text-xl group-hover:scale-110 transition-transform">✌️✊✋</span>
-                <span className="text-xs tracking-wider">Hand Duel</span>
+                <span className="text-xs tracking-wider text-center px-1">{t('lobby.gameNames.handDuel')}</span>
               </button>
             </div>
 
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-slate-800"></div>
-              <span className="flex-shrink-0 mx-4 text-slate-500 text-sm font-medium">OR</span>
+              <span className="flex-shrink-0 mx-4 text-slate-500 text-sm font-medium">{t('lobby.or')}</span>
               <div className="flex-grow border-t border-slate-800"></div>
             </div>
 
@@ -152,11 +177,11 @@ function GameLobby() {
                   }
                 }}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-mono uppercase font-bold text-center"
-                placeholder="ROOM CODE"
+                placeholder={t('lobby.roomCodePlaceholder')}
                 maxLength={6}
               />
               <button onClick={() => joinRoom(joinCode)} disabled={!myName || joinCode.length < 4} className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 rounded-xl transition-colors">
-                Join
+                {t('lobby.join')}
               </button>
             </div>
           </div>
@@ -166,7 +191,7 @@ function GameLobby() {
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-px bg-slate-800 flex-1"></div>
                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                  Public Lobbies
+                  {t('lobby.publicLobbies')}
                   <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md shadow-sm">{availableRooms.length}</span>
                 </h3>
                 <div className="h-px bg-slate-800 flex-1"></div>
@@ -178,7 +203,7 @@ function GameLobby() {
                     key={i}
                     onClick={() => {
                       if (!myName) {
-                        toast.error("Please enter your display name first");
+                        toast.error(t('errors.enterNameFirst'));
                         return;
                       }
                       setJoinCode(r.code);
@@ -190,25 +215,25 @@ function GameLobby() {
                       <div className="text-slate-200 font-bold font-mono tracking-widest text-lg leading-none mb-1 group-hover:text-indigo-300 transition-colors flex items-center gap-2">
                         {r.code}
                         <span className={`text-[9px] px-1.5 py-0.5 rounded border leading-none ml-2 tracking-normal font-sans ${r.gameType === GameType.GOBBLER_TIC_TAC_TOE || r.gameType === GameType.TIC_TAC_TOE ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : r.gameType === GameType.RPS ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
-                          {r.gameType === GameType.GOBBLER_TIC_TAC_TOE ? "GOBBLER TIC-TAC-TOE" : r.gameType === GameType.TIC_TAC_TOE ? "TIC-TAC-TOE" : r.gameType === GameType.RPS ? "HAND DUEL" : "WHO KNOW"}
+                          {r.gameType === GameType.GOBBLER_TIC_TAC_TOE ? t('lobby.gameNames.gobbler').toUpperCase() : r.gameType === GameType.TIC_TAC_TOE ? t('lobby.gameNames.ticTacToe').toUpperCase() : r.gameType === GameType.RPS ? t('lobby.gameNames.handDuel').toUpperCase() : t('lobby.gameNames.whoKnow').toUpperCase()}
                         </span>
                       </div>
                       <div className="text-slate-500 text-[10px] font-medium uppercase mt-0.5 tracking-wider flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
                           <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                         </svg>
-                        Host <span className="text-slate-300 normal-case font-bold">{r.hostName}</span>
+                        {t('lobby.host')} <span className="text-slate-300 normal-case font-bold">{r.hostName}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800 shadow-inner group-hover:border-indigo-500/30 transition-colors" title={`${r.playerCount} Players currently in room`}>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800 shadow-inner group-hover:border-indigo-500/30 transition-colors" title={t('lobby.playersInRoom')}>
                         {r.playerCount}
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 group-hover:text-indigo-400 transition-colors">
                           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                           <circle cx="12" cy="7" r="4" />
                         </svg>
                       </div>
-                      <div className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl shadow-lg shadow-indigo-500/20 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 border border-indigo-500/50">Join</div>
+                      <div className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl shadow-lg shadow-indigo-500/20 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 border border-indigo-500/50">{t('lobby.join')}</div>
                     </div>
                   </button>
                 ))}
@@ -229,32 +254,32 @@ function GameLobby() {
             <img src="/icon.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-sm border border-slate-700" />
             <div className="flex flex-col">
               <span className="text-xs font-black tracking-widest text-slate-500 uppercase leading-none mb-0.5 hidden sm:block">
-               {room.gameType === GameType.GOBBLER_TIC_TAC_TOE ? "Gobbler Tic Tac Toe" : room.gameType === GameType.TIC_TAC_TOE ? "Tic Tac Toe" : room.gameType === GameType.RPS ? "Hand Duel" : "Who Know"}
+               {room.gameType === GameType.GOBBLER_TIC_TAC_TOE ? t('lobby.gameNames.gobbler') : room.gameType === GameType.TIC_TAC_TOE ? t('lobby.gameNames.ticTacToe') : room.gameType === GameType.RPS ? t('lobby.gameNames.handDuel') : t('lobby.gameNames.whoKnow')}
               </span>
               <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-indigo-400 leading-none">{room.code}</span>
             </div>
             <span className="text-[10px] sm:text-xs font-medium text-slate-500 ml-1 sm:ml-2 border-l border-slate-700 pl-2 sm:pl-4 py-0.5 flex items-center gap-1">
-              <span className="hidden sm:inline">Room Host:</span>
+              <span className="hidden sm:inline">{t('lobby.roomHost')}</span>
               <span className="text-slate-300 font-bold truncate max-w-[100px] sm:max-w-[150px]" title="Room Creator">
-                {room.players?.find((p) => p.socketId === room.roomHostId)?.name || "Unknown"}
+                {room.players?.find((p) => p.socketId === room.roomHostId)?.name || t('lobby.unknownHost')}
               </span>
             </span>
             <button
               onClick={() => {
                 const inviteLink = `${window.location.origin}/?room=${room.code}`;
                 navigator.clipboard.writeText(inviteLink);
-                toast.success("Invite link copied!");
+                toast.success(t('errors.inviteLinkCopied'));
               }}
               className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 font-bold px-2.5 py-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5 sm:ml-2"
-              title="Copy Invite Link"
+              title={t('lobby.copyLink')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
-              <span className="hidden sm:inline">Copy Link</span>
+              <span className="hidden sm:inline">{t('lobby.copyLink')}</span>
             </button>
-            <button onClick={() => setShowQRModal(true)} className="bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 hover:text-purple-300 border border-purple-500/30 font-bold px-2.5 py-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5 ml-1" title="Show QR Code">
+            <button onClick={() => setShowQRModal(true)} className="bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 hover:text-purple-300 border border-purple-500/30 font-bold px-2.5 py-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5 ml-1" title={t('lobby.qrCode')}>
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                 <rect width="4" height="4" x="7" y="7" />
@@ -262,18 +287,19 @@ function GameLobby() {
                 <rect width="4" height="4" x="7" y="13" />
                 <rect width="4" height="4" x="13" y="13" />
               </svg>
-              <span className="hidden sm:inline">QR Code</span>
+              <span className="hidden sm:inline">{t('lobby.qrCode')}</span>
             </button>
+            <LanguageSwitcher />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <RulesModal defaultGameType={room.gameType} />
-            <button onClick={() => setShowLeaveModal(true)} className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 whitespace-nowrap" title="Leave Room">
+            <RulesModal defaultGameType={room.gameType} isGameRoom={true} />
+            <button onClick={() => setShowLeaveModal(true)} className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 px-3 py-1.5 rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-1.5 whitespace-nowrap" title={t('lobby.leave')}>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-              <span className="hidden sm:inline">Leave</span>
+              <span className="hidden sm:inline">{t('lobby.leave')}</span>
             </button>
           </div>
         </header>
@@ -297,7 +323,7 @@ function GameLobby() {
             {/* Left: Players Table */}
             <div className="flex-1 md:flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-4 shadow-xl overflow-hidden min-h-[100px]">
             <div className="flex flex-none items-center justify-between mb-2 sm:mb-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Players</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">{t('lobby.players')}</h3>
               <span className="bg-slate-800 px-2 py-0.5 rounded-full text-[10px] text-indigo-400 font-black border border-slate-700">{room.players.length}</span>
             </div>
 
@@ -305,8 +331,8 @@ function GameLobby() {
               <table className="w-full text-sm text-left relative">
                 <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/90 backdrop-blur-md sticky top-0 border-b border-slate-800/80 shadow-sm">
                   <tr>
-                    <th className="px-3 py-2 font-bold tracking-wider">Player</th>
-                    <th className="px-3 py-2 text-right font-bold tracking-wider">Score</th>
+                    <th className="px-3 py-2 font-bold tracking-wider">{t('lobby.players')}</th>
+                    <th className="px-3 py-2 text-right font-bold tracking-wider">{t('lobby.score')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/30">
@@ -318,12 +344,12 @@ function GameLobby() {
                         </span>
                         <span className="truncate max-w-[120px] sm:max-w-[200px] text-slate-300">
                           {p.name}
-                          {p.connected === false && <span className="text-[9px] font-bold text-slate-500 ml-1.5 align-middle border border-slate-700 bg-slate-800/50 px-1 py-0.5 rounded leading-none inline-flex">(OFFLINE)</span>}
-                          {p.name === myName && <span className="text-[9px] font-bold text-indigo-400 ml-1.5 align-middle">(YOU)</span>}
+                          {p.connected === false && <span className="text-[9px] font-bold text-slate-500 ml-1.5 align-middle border border-slate-700 bg-slate-800/50 px-1 py-0.5 rounded leading-none inline-flex">({t('lobby.offline')})</span>}
+                          {p.name === myName && <span className="text-[9px] font-bold text-indigo-400 ml-1.5 align-middle">({t('lobby.you')})</span>}
                         </span>
                         {p.role === Role.Host && (
                           <span className="text-[9px] bg-amber-500/10 text-amber-500 px-1 py-0.5 rounded border border-amber-500/20 ml-auto shadow-sm leading-none flex items-center" title="Game Host">
-                            HOST
+                            {t('lobby.host').toUpperCase()}
                           </span>
                         )}
                         {room.status === RoomStatus.VOTING && room.votes?.[p.socketId] && (
@@ -331,7 +357,7 @@ function GameLobby() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                            LOCKED
+                            {t('lobby.locked')}
                           </span>
                         )}
                       </td>
@@ -347,26 +373,26 @@ function GameLobby() {
           <div className="flex-none md:flex-[1.5] flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl p-2 sm:p-4 shadow-xl min-h-[300px]">
             {room.status === RoomStatus.LOBBY && (
               <div className="flex-1 flex flex-col items-center justify-center gap-6 min-h-[150px]">
-                <h4 className="text-lg font-black uppercase text-indigo-400 tracking-widest bg-indigo-500/10 px-4 py-2 rounded-lg border border-indigo-500/20">Waiting Room</h4>
+                <h4 className="text-lg font-black uppercase text-indigo-400 tracking-widest bg-indigo-500/10 px-4 py-2 rounded-lg border border-indigo-500/20">{t('lobby.waitingRoom')}</h4>
 
                 {/* Configuration Panel */}
                 <div className="w-full max-w-sm bg-slate-950/50 border border-slate-800 rounded-xl p-4 space-y-4">
                   {room.gameType === GameType.WHO_KNOW && (
                     <>
                       <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Host Selection</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('lobby.hostSelection')}</label>
                         {useGameStore.getState().socketId === room.roomHostId ? (
                           <select value={room.config?.hostSelection || "ROUND_ROBIN"} onChange={(e) => useGameStore.getState().updateConfig({ hostSelection: e.target.value as any })} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none">
-                            <option value="ROUND_ROBIN">Round Robin</option>
-                            <option value="RANDOM">Random</option>
-                            <option value="FIXED">Room Creator (Fixed)</option>
+                            <option value="ROUND_ROBIN">{t('lobby.roundRobin')}</option>
+                            <option value="RANDOM">{t('lobby.random')}</option>
+                            <option value="FIXED">{t('lobby.roomCreatorFixed')}</option>
                           </select>
                         ) : (
-                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.hostSelection === "ROUND_ROBIN" ? "Round Robin" : room.config?.hostSelection === "RANDOM" ? "Random" : "Room Creator (Fixed)"}</div>
+                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.hostSelection === "ROUND_ROBIN" ? t('lobby.roundRobin') : room.config?.hostSelection === "RANDOM" ? t('lobby.random') : t('lobby.roomCreatorFixed')}</div>
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Timer (Minutes)</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('lobby.timerMinutes')}</label>
                         {useGameStore.getState().socketId === room.roomHostId ? (
                           <input
                             type="number"
@@ -385,7 +411,7 @@ function GameLobby() {
                             className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
                           />
                         ) : (
-                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.timerMin || 5} Minutes</div>
+                          <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">{room.config?.timerMin || 5} {t('lobby.minutes')}</div>
                         )}
                       </div>
                     </>
@@ -394,7 +420,7 @@ function GameLobby() {
                   {room.gameType === GameType.RPS && (
                     <>
                       <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mode</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('lobby.mode')}</label>
                         {useGameStore.getState().socketId === room.roomHostId ? (
                           <select
                             value={room.config?.rpsMode || "1V1_ROUND_ROBIN"}
@@ -403,18 +429,18 @@ function GameLobby() {
                             }}
                             className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none"
                           >
-                            <option value="1V1_ROUND_ROBIN">1v1 Round Robin</option>
-                            <option value="ALL_AT_ONCE">All At Once</option>
+                            <option value="1V1_ROUND_ROBIN">{t('lobby.oneVOneRoundRobin')}</option>
+                            <option value="ALL_AT_ONCE">{t('lobby.allAtOnce')}</option>
                           </select>
                         ) : (
                           <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">
-                            {room.config?.rpsMode === 'ALL_AT_ONCE' ? 'All At Once' : '1v1 Round Robin'}
+                            {room.config?.rpsMode === 'ALL_AT_ONCE' ? t('lobby.allAtOnce') : t('lobby.oneVOneRoundRobin')}
                           </div>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Score (Best Of)</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('lobby.targetScore')}</label>
                         {useGameStore.getState().socketId === room.roomHostId ? (
                           <select
                             value={room.config?.rpsBestOf || 3}
@@ -423,14 +449,14 @@ function GameLobby() {
                             }}
                             className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none"
                           >
-                            <option value={1}>BO1 (First to 1)</option>
-                            <option value={3}>BO3 (First to 2)</option>
-                            <option value={5}>BO5 (First to 3)</option>
-                            <option value={7}>BO7 (First to 4)</option>
+                            <option value={1}>{t('lobby.bo1')}</option>
+                            <option value={3}>{t('lobby.bo3')}</option>
+                            <option value={5}>{t('lobby.bo5')}</option>
+                            <option value={7}>{t('lobby.bo7')}</option>
                           </select>
                         ) : (
                           <div className="text-slate-300 font-medium text-sm px-3 py-2 bg-slate-900/50 rounded-lg border border-slate-800/50">
-                            Best of {room.config?.rpsBestOf || 3}
+                            {t('lobby.bestOf')} {room.config?.rpsBestOf || 3}
                           </div>
                         )}
                       </div>
@@ -440,10 +466,10 @@ function GameLobby() {
 
                 {useGameStore.getState().socketId === room.roomHostId ? (
                   <button onClick={startGame} disabled={room.players.length < (room.gameType === GameType.WHO_KNOW ? 4 : 2)} className="w-full max-w-xs bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl transition-colors uppercase tracking-widest shadow-lg shadow-green-900/20">
-                    {room.players.length < (room.gameType === GameType.WHO_KNOW ? 4 : 2) ? `Waiting (min ${room.gameType === GameType.WHO_KNOW ? 4 : 2})` : "Start Game"}
+                    {room.players.length < (room.gameType === GameType.WHO_KNOW ? 4 : 2) ? t('lobby.waitingMin', { count: room.gameType === GameType.WHO_KNOW ? 4 : 2 }) : t('lobby.startGame')}
                   </button>
                 ) : (
-                  <div className="w-full max-w-xs bg-slate-800/50 text-slate-400 border border-slate-800 font-bold text-sm py-4 rounded-xl text-center uppercase tracking-widest">Waiting for Room Host to start</div>
+                  <div className="w-full max-w-xs bg-slate-800/50 text-slate-400 border border-slate-800 font-bold text-sm py-4 rounded-xl text-center uppercase tracking-widest">{t('lobby.waitingForHost')}</div>
                 )}
               </div>
             )}
@@ -458,8 +484,8 @@ function GameLobby() {
         {/* Phase Footer */}
         {room.status !== RoomStatus.LOBBY && room.gameType === GameType.WHO_KNOW && (
           <footer className="flex-none p-2 sm:p-3 bg-slate-900 border border-slate-800 rounded-xl text-center shadow-xl flex items-center justify-center gap-2 sm:gap-3 w-full">
-            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Phase</span>
-            <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-full text-[10px] sm:text-xs font-black tracking-widest">{room.status === "WORD_SETTING" ? "SECRET WORD SELECTION" : room.status.replace("_", " ")}</span>
+            <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">{t('lobby.phase')}</span>
+            <span className="px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-full text-[10px] sm:text-xs font-black tracking-widest">{room.status === "WORD_SETTING" ? t('lobby.secretWordSelection') : room.status.replace("_", " ")}</span>
           </footer>
         )}
       </div>
@@ -471,15 +497,15 @@ function GameLobby() {
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
             <div className="p-6 md:p-8 flex flex-col gap-6">
               <div className="text-center">
-                <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">You are the Host</h3>
-                <p className="text-slate-400 font-medium">Enter the secret word for this round. Only you and the Insider will know what it is!</p>
+                <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">{t('lobby.youAreHost')}</h3>
+                <p className="text-slate-400 font-medium">{t('lobby.enterSecretWordDesc')}</p>
               </div>
 
               <div>
                 <input
                   type="text"
                   id="secretWordModalInput"
-                  placeholder="Type secret word..."
+                  placeholder={t('lobby.typeSecretWord')}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-center text-xl shadow-inner mb-4"
                   autoFocus
                   onKeyDown={(e) => {
@@ -498,7 +524,7 @@ function GameLobby() {
                   }}
                   className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-lg py-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98]"
                 >
-                  Confirm Secret Word
+                  {t('lobby.confirmSecretWord')}
                 </button>
               </div>
             </div>
@@ -519,16 +545,14 @@ function GameLobby() {
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-widest">Leave Room?</h3>
-              <p className="text-slate-400 font-medium text-sm mb-4">
-                Are you sure you want to leave the room?
-                <br />
-                You'll need the room code to rejoin.
+              <h3 className="text-2xl font-black text-white uppercase tracking-widest">{t('lobby.leaveRoomTitle')}</h3>
+              <p className="text-slate-400 font-medium text-sm mb-4 whitespace-pre-line">
+                {t('lobby.leaveRoomDesc')}
               </p>
 
               <div className="flex gap-3 mt-2">
                 <button onClick={() => setShowLeaveModal(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl transition-all">
-                  Cancel
+                  {t('lobby.cancel')}
                 </button>
                 <button
                   onClick={() => {
@@ -537,7 +561,7 @@ function GameLobby() {
                   }}
                   className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-rose-900/20"
                 >
-                  Leave Room
+                  {t('lobby.leaveRoomBtn')}
                 </button>
               </div>
             </div>
@@ -551,9 +575,9 @@ function GameLobby() {
           <div className="bg-slate-900 border border-purple-500/50 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
             <div className="p-6 md:p-8 flex flex-col items-center gap-4 text-center">
-              <h3 className="text-2xl font-black text-white uppercase tracking-widest">Invite Players</h3>
+              <h3 className="text-2xl font-black text-white uppercase tracking-widest">{t('lobby.invitePlayers')}</h3>
               <p className="text-slate-400 font-medium text-sm mb-2">
-                Scan this QR code to join room <span className="text-purple-400 font-mono font-bold">{room.code}</span>
+                {t('lobby.scanQrCodeDesc')} <span className="text-purple-400 font-mono font-bold">{room.code}</span>
               </p>
 
               <div className="bg-white p-4 rounded-2xl shadow-inner mx-auto mb-2">
@@ -567,7 +591,7 @@ function GameLobby() {
               </div>
 
               <button onClick={() => setShowQRModal(false)} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl transition-all border border-slate-700 mt-2">
-                Close
+                {t('lobby.close')}
               </button>
             </div>
           </div>

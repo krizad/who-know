@@ -5,14 +5,17 @@ import { TicTacToeRules } from "./games/tic-tac-toe/TicTacToeRules";
 import { GobblerRules } from "./games/gobbler/GobblerRules";
 import { RPSRules } from "./games/rps/RPSRules";
 import { LobbyRules } from "./games/LobbyRules";
+import { useTranslate } from "@/hooks/useTranslate";
 
 interface RulesModalProps {
   defaultGameType?: GameType;
+  isGameRoom?: boolean;
 }
 
-export function RulesModal({ defaultGameType }: RulesModalProps) {
+export function RulesModal({ defaultGameType, isGameRoom }: RulesModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<GameType | "LOBBY">(defaultGameType || "LOBBY");
+  const { t } = useTranslate();
 
   // When defaultGameType changes, ensure tab updates if open
   useEffect(() => {
@@ -40,13 +43,13 @@ export function RulesModal({ defaultGameType }: RulesModalProps) {
 
   return (
     <>
-      <button onClick={() => setIsOpen(true)} className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-800 hover:bg-slate-800/50 text-nowrap" title="How to Play">
+      <button onClick={() => setIsOpen(true)} className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-800 hover:bg-slate-800/50 text-nowrap" title={t('rules.modal.title')}>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
           <path d="M12 17h.01" />
         </svg>
-        <span className="hidden sm:inline">Rules</span>
+        <span className="hidden sm:inline">{t('rules.button')}</span>
       </button>
 
       {isOpen && (
@@ -58,7 +61,7 @@ export function RulesModal({ defaultGameType }: RulesModalProps) {
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                   <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                 </svg>
-                How to Play
+                {t('rules.modal.title')}
               </h2>
               <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-slate-300 hover:bg-slate-800 p-2 rounded-full transition-colors" aria-label="Close rules">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -68,15 +71,17 @@ export function RulesModal({ defaultGameType }: RulesModalProps) {
               </button>
             </div>
 
-            <div className="bg-slate-900 pt-3 border-b border-slate-800 shrink-0">
-               <div className="flex gap-2 overflow-x-auto px-6 pb-3 no-scrollbar shrink-0">
-                 <button onClick={() => setActiveTab("LOBBY")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "LOBBY" ? 'bg-purple-500/20 text-purple-400 shadow-inner border border-purple-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>Overview</button>
-                 <button onClick={() => setActiveTab(GameType.WHO_KNOW)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.WHO_KNOW ? 'bg-indigo-500/20 text-indigo-400 shadow-inner border border-indigo-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>Who Know</button>
-                 <button onClick={() => setActiveTab(GameType.GOBBLER_TIC_TAC_TOE)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.GOBBLER_TIC_TAC_TOE ? 'bg-blue-500/20 text-blue-400 shadow-inner border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>Gobbler</button>
-                 <button onClick={() => setActiveTab(GameType.TIC_TAC_TOE)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.TIC_TAC_TOE ? 'bg-zinc-500/20 text-zinc-400 shadow-inner border border-zinc-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>Tic Tac Toe</button>
-                 <button onClick={() => setActiveTab(GameType.RPS)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.RPS ? 'bg-amber-500/20 text-amber-400 shadow-inner border border-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>Hand Duel</button>
-               </div>
-            </div>
+            {!isGameRoom && (
+              <div className="bg-slate-900 pt-3 border-b border-slate-800 shrink-0">
+                 <div className="flex gap-2 overflow-x-auto px-6 pb-3 no-scrollbar shrink-0">
+                   <button onClick={() => setActiveTab("LOBBY")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === "LOBBY" ? 'bg-purple-500/20 text-purple-400 shadow-inner border border-purple-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>{t('rules.modal.tabs.overview')}</button>
+                   <button onClick={() => setActiveTab(GameType.WHO_KNOW)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.WHO_KNOW ? 'bg-indigo-500/20 text-indigo-400 shadow-inner border border-indigo-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>{t('rules.modal.tabs.whoKnow')}</button>
+                   <button onClick={() => setActiveTab(GameType.GOBBLER_TIC_TAC_TOE)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.GOBBLER_TIC_TAC_TOE ? 'bg-blue-500/20 text-blue-400 shadow-inner border border-blue-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>{t('rules.modal.tabs.gobbler')}</button>
+                   <button onClick={() => setActiveTab(GameType.TIC_TAC_TOE)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.TIC_TAC_TOE ? 'bg-zinc-500/20 text-zinc-400 shadow-inner border border-zinc-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>{t('rules.modal.tabs.ticTacToe')}</button>
+                   <button onClick={() => setActiveTab(GameType.RPS)} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${activeTab === GameType.RPS ? 'bg-amber-500/20 text-amber-400 shadow-inner border border-amber-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}>{t('rules.modal.tabs.handDuel')}</button>
+                 </div>
+              </div>
+            )}
 
             <div className="p-6 overflow-y-auto text-slate-300 bg-slate-900/50 flex-1">
               {renderContent()}
@@ -84,7 +89,7 @@ export function RulesModal({ defaultGameType }: RulesModalProps) {
 
             <div className="p-6 border-t border-slate-800 bg-slate-900 shrink-0">
               <button onClick={() => setIsOpen(false)} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg py-4 rounded-xl transition-colors shadow-lg active:scale-[0.98]">
-                Got it, let's play!
+                {t('rules.modal.closeBtn')}
               </button>
             </div>
           </div>
