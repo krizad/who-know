@@ -74,7 +74,7 @@ function GameLobby() {
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-center mb-2 tracking-tighter text-white">{t('lobby.invited')}</h1>
             <p className="text-center text-slate-400 mb-8 font-medium">
-              {t('lobby.joinRoomInfo')} <span className="text-indigo-400 font-mono font-bold">{roomQuery.toUpperCase()}</span>
+              {t('lobby.joinRoomInfo')} <span className="text-indigo-400 font-bold">{roomQuery.toUpperCase()}</span>
             </p>
 
             <div className="space-y-6">
@@ -176,7 +176,7 @@ function GameLobby() {
                     joinRoom(joinCode);
                   }
                 }}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-mono uppercase font-bold text-center"
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all uppercase font-bold text-center"
                 placeholder={t('lobby.roomCodePlaceholder')}
                 maxLength={6}
               />
@@ -212,7 +212,7 @@ function GameLobby() {
                     className="w-full bg-slate-900 border border-slate-800/80 hover:border-indigo-500/50 rounded-2xl p-4 text-left transition-all flex items-center justify-between group shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-0.5"
                   >
                     <div>
-                      <div className="text-slate-200 font-bold font-mono tracking-widest text-lg leading-none mb-1 group-hover:text-indigo-300 transition-colors flex items-center gap-2">
+                      <div className="text-slate-200 font-bold tracking-widest text-lg leading-none mb-1 group-hover:text-indigo-300 transition-colors flex items-center gap-2">
                         {r.code}
                         <span className={`text-[9px] px-1.5 py-0.5 rounded border leading-none ml-2 tracking-normal font-sans ${r.gameType === GameType.GOBBLER_TIC_TAC_TOE || r.gameType === GameType.TIC_TAC_TOE ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : r.gameType === GameType.RPS ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'}`}>
                           {r.gameType === GameType.GOBBLER_TIC_TAC_TOE ? t('lobby.gameNames.gobbler').toUpperCase() : r.gameType === GameType.TIC_TAC_TOE ? t('lobby.gameNames.ticTacToe').toUpperCase() : r.gameType === GameType.RPS ? t('lobby.gameNames.handDuel').toUpperCase() : t('lobby.gameNames.whoKnow').toUpperCase()}
@@ -256,7 +256,7 @@ function GameLobby() {
               <span className="text-xs font-black tracking-widest text-slate-500 uppercase leading-none mb-0.5 hidden sm:block">
                {room.gameType === GameType.GOBBLER_TIC_TAC_TOE ? t('lobby.gameNames.gobbler') : room.gameType === GameType.TIC_TAC_TOE ? t('lobby.gameNames.ticTacToe') : room.gameType === GameType.RPS ? t('lobby.gameNames.handDuel') : t('lobby.gameNames.whoKnow')}
               </span>
-              <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-indigo-400 leading-none">{room.code}</span>
+              <span className="text-xl sm:text-2xl font-black tracking-widest text-indigo-400 leading-none">{room.code}</span>
             </div>
             <span className="text-[10px] sm:text-xs font-medium text-slate-500 ml-1 sm:ml-2 border-l border-slate-700 pl-2 sm:pl-4 py-0.5 flex items-center gap-1">
               <span className="hidden sm:inline">{t('lobby.roomHost')}</span>
@@ -361,7 +361,7 @@ function GameLobby() {
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono text-slate-400 font-medium">{p.score}</td>
+                      <td className="px-3 py-2 text-right text-slate-400 font-medium">{p.score}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -577,7 +577,7 @@ function GameLobby() {
             <div className="p-6 md:p-8 flex flex-col items-center gap-4 text-center">
               <h3 className="text-2xl font-black text-white uppercase tracking-widest">{t('lobby.invitePlayers')}</h3>
               <p className="text-slate-400 font-medium text-sm mb-2">
-                {t('lobby.scanQrCodeDesc')} <span className="text-purple-400 font-mono font-bold">{room.code}</span>
+                {t('lobby.scanQrCodeDesc')} <span className="text-purple-400 font-bold">{room.code}</span>
               </p>
 
               <div className="bg-white p-4 rounded-2xl shadow-inner mx-auto mb-2">

@@ -13,3 +13,14 @@ body {
   color: var(--foreground);
   background: var(--background);
 }
+
+input,
+textarea,
+button,
+select {
+  font-family: inherit;
+}
+
+::placeholder {
+  font-family: inherit;
+}

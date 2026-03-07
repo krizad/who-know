@@ -30,7 +30,7 @@ export function WhoKnowView() {
             {myRole === Role.Host ? <p className="text-slate-300 font-medium text-xs sm:text-sm">Answer the players' Yes/No questions.</p> : <p className="text-slate-300 font-medium text-xs sm:text-sm">Ask the Game Host Yes or No questions to find the Secret Word!</p>}
           </div>
 
-          <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-mono font-black text-white bg-slate-950 px-6 py-4 rounded-2xl border-2 sm:border-4 border-slate-800 shadow-inner tracking-widest w-full max-w-sm text-center">{room.endTime ? <CountdownTimer endTime={room.endTime} /> : <span>--:--</span>}</div>
+          <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white bg-slate-950 px-6 py-4 rounded-2xl border-2 sm:border-4 border-slate-800 shadow-inner tracking-widest w-full max-w-sm text-center">{room.endTime ? <CountdownTimer endTime={room.endTime} /> : <span>--:--</span>}</div>
 
           {myRole === Role.Host && (
             <div className="flex flex-col gap-3 mt-2 w-full max-w-md">
@@ -136,7 +136,7 @@ export function WhoKnowView() {
                             {targetPlayer.name}
                             {isMostVoted && <span className="ml-1.5 text-[9px] bg-orange-500/20 text-orange-400 px-1 py-0.5 rounded uppercase tracking-wider font-black">Most Voted</span>}
                           </span>
-                          <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded font-mono ${isMostVoted ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"}`}>
+                          <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded ${isMostVoted ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"}`}>
                             {voterIds.length} {voterIds.length === 1 ? "VOTE" : "VOTES"}
                           </span>
                         </div>

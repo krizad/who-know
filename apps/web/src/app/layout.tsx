@@ -6,7 +6,6 @@ const ibmPlexSansThai = IBM_Plex_Sans_Thai({
   subsets: ['latin', 'thai'],
   weight: ['100', '200', '300', '400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-ibm-plex-sans-thai',
 });
 
 export const metadata: Metadata = {
@@ -21,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${ibmPlexSansThai.variable} font-sans antialiased min-h-screen`}>
+      <body className={`${ibmPlexSansThai.className} antialiased min-h-screen`}>
         {children}
       </body>
     </html>

@@ -37,7 +37,7 @@ export function RPSView() {
       <div key={`active-${playerId}`} className={`flex flex-col items-center transition-all ${mySideIndex !== -1 && mySideIndex !== index ? "opacity-50" : ""} ${isWinner ? "scale-110" : ""}`}>
         <span className={`font-black text-2xl ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-orange-400' : 'text-indigo-400'}`}>P{index + 1}</span>
         <span className="text-slate-300 font-medium text-sm text-center truncate max-w-[100px]">{player.name}</span>
-        <span className={`font-mono text-xs mt-1 px-2 py-0.5 rounded-md border shadow-inner ${index === 0 ? 'text-amber-300 bg-amber-950/50 border-amber-900/50' : index === 1 ? 'text-orange-300 bg-orange-950/50 border-orange-900/50' : 'text-indigo-300 bg-indigo-950/50 border-indigo-900/50'}`}>
+        <span className={`text-xs mt-1 px-2 py-0.5 rounded-md border shadow-inner ${index === 0 ? 'text-amber-300 bg-amber-950/50 border-amber-900/50' : index === 1 ? 'text-orange-300 bg-orange-950/50 border-orange-900/50' : 'text-indigo-300 bg-indigo-950/50 border-indigo-900/50'}`}>
           {score} / {targetScore}
         </span>
         {room.status === RoomStatus.RESULT && choice && (

@@ -47,7 +47,7 @@ export function TicTacToeView() {
             <div className={`flex flex-col items-center ${ttt.currentTurn === "X" ? "scale-110 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" : "opacity-50"} transition-all`}>
               <span className="text-blue-400 font-black text-2xl">X</span>
               <span className="text-slate-300 font-medium text-sm">{room.players.find(p => p.socketId === ttt.playerXId)?.name}</span>
-              <span className="text-blue-300 font-mono text-xs mt-1 bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-900/50 shadow-inner">
+              <span className="text-blue-300 text-xs mt-1 bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-900/50 shadow-inner">
                 Score: {room.players.find(p => p.socketId === ttt.playerXId)?.score || 0}
               </span>
             </div>
@@ -59,7 +59,7 @@ export function TicTacToeView() {
             <div className={`flex flex-col items-center ${ttt.currentTurn === "O" ? "scale-110 drop-shadow-[0_0_15px_rgba(244,63,94,0.5)]" : "opacity-50"} transition-all`}>
               <span className="text-rose-400 font-black text-2xl">O</span>
               <span className="text-slate-300 font-medium text-sm">{room.players.find(p => p.socketId === ttt.playerOId)?.name}</span>
-              <span className="text-rose-300 font-mono text-xs mt-1 bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-900/50 shadow-inner">
+              <span className="text-rose-300 text-xs mt-1 bg-rose-950/50 px-2 py-0.5 rounded-md border border-rose-900/50 shadow-inner">
                 Score: {room.players.find(p => p.socketId === ttt.playerOId)?.score || 0}
               </span>
             </div>
