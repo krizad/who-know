@@ -62,12 +62,12 @@ export function SoundsFishyView() {
              {/* Question Display */}
              <div className="bg-slate-950 p-6 rounded-xl border border-slate-800 w-full mb-8">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">{t('gameSoundsFishy.theTopic')}</span>
-                <p className="text-xl sm:text-2xl font-bold text-slate-200">{state.question.question}</p>
+                <p className="text-xl sm:text-2xl font-bold text-slate-200">{state.question?.question}</p>
                 
                 {!isPicker && (
                     <div className="mt-4 pt-4 border-t border-slate-800">
                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">{t('gameSoundsFishy.trueAnswer')}</span>
-                       <p className="text-2xl font-black text-blue-400 bg-blue-500/10 inline-block px-4 py-2 rounded-lg border border-blue-500/20">{state.question.answer}</p>
+                       <p className="text-2xl font-black text-blue-400 bg-blue-500/10 inline-block px-4 py-2 rounded-lg border border-blue-500/20">{state.question?.answer}</p>
                     </div>
                 )}
              </div>
@@ -142,7 +142,7 @@ export function SoundsFishyView() {
         <div className="flex-1 flex flex-col space-y-6">
              <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center w-full shadow-lg">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">{t('gameSoundsFishy.theTopic')}</span>
-                <p className="text-xl sm:text-2xl font-bold text-slate-200">{state.question.question}</p>
+                <p className="text-xl sm:text-2xl font-bold text-slate-200">{state.question?.question}</p>
                  {isPicker ? (
                      <div className="mt-4 pt-4 border-t border-slate-800">
                         <span className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-2 block">
@@ -152,7 +152,7 @@ export function SoundsFishyView() {
                  ) : (
                     <div className="mt-4 pt-4 border-t border-slate-800">
                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block flex items-center justify-center gap-2">
-                          {t('gameSoundsFishy.trueAnswer')} <span className="text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">{state.question.answer}</span>
+                          {t('gameSoundsFishy.trueAnswer')} <span className="text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">{state.question?.answer}</span>
                        </span>
                     </div>
                 )}
