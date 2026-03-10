@@ -106,9 +106,9 @@ function GameLobby() {
                   window.history.replaceState({}, document.title, window.location.pathname);
                   setJoinCode("");
                 }}
-                className="w-full text-slate-500 hover:text-slate-300 font-medium text-sm transition-colors py-2"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-lg py-3 rounded-xl transition-all shadow-lg active:scale-[0.98] border border-slate-700"
               >
-                {t('lobby.createOwnRoom')}
+                {t('lobby.returnToHome')}
               </button>
             </div>
           </div>

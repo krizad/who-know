@@ -4,7 +4,7 @@ import { RoomState, RoomStatus, RPSChoice, GameType, Role } from '@repo/types';
 @Injectable()
 export class RPSService {
   assignRoles(room: RoomState, requesterId: string): { room: RoomState, roles: Record<string, Role> } | null {
-    if (room.players.length < 4) return null;
+    if (room.players.length < 2) return null;
     if (room.roomHostId !== requesterId) return null;
 
     if (!room.rpsState) return null;

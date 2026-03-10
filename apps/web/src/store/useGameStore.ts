@@ -85,19 +85,23 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     socket.on(SOCKET_EVENTS.ROOM_STATE_UPDATED, (room: RoomState) => {
+      // Check if the current player is still in the room
+      const currentName = get().myName;
+      const isMe = room.players.find(p => p.socketId === socket.id || p.name === currentName);
+      
+      // If we're not in the room's player list, ignore this update
+      // (prevents race condition where leaveRoom sets room=null but server broadcast re-sets it)
+      if (!isMe) return;
+
       if (room.status === RoomStatus.LOBBY) {
         set({ room, myRole: null, secretWord: null });
       } else {
         set({ room });
       }
       
-      // Save session if we are in the room
-      const currentName = get().myName;
-      const isMe = room.players.find(p => p.socketId === socket.id || p.name === currentName);
-      if (isMe) {
-          localStorage.setItem('who-know-roomCode', room.code);
-          localStorage.setItem('who-know-name', currentName);
-      }
+      // Save session
+      localStorage.setItem('who-know-roomCode', room.code);
+      localStorage.setItem('who-know-name', currentName);
     });
 
     socket.on(SOCKET_EVENTS.ROLE_ASSIGNED, ({ role }: { role: Role }) => {

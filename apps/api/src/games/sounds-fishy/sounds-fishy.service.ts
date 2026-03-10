@@ -8,7 +8,9 @@ export class SoundsFishyService {
     if (room.players.length < 3) return null; // Need at least 3 players
     if (room.roomHostId !== requesterId) return null;
 
+    const lang = room.config.language || 'th';
     const minQueryCountResult = await prisma.soundsFishyQuestion.aggregate({
+      where: { lang },
       _min: { query_count: true },
     });
     
@@ -18,7 +20,7 @@ export class SoundsFishyService {
     const minQueryCount = minQueryCountResult._min.query_count;
 
     const questionsWithMinCount = await prisma.soundsFishyQuestion.findMany({
-      where: { query_count: minQueryCount },
+      where: { lang, query_count: minQueryCount },
       select: { id: true, question: true, answer: true, lang: true },
     });
 
@@ -87,6 +89,20 @@ export class SoundsFishyService {
     return room;
   }
 
+  checkAnswerResolution(room: RoomState): boolean {
+    if (!room.soundsFishyState || room.soundsFishyState.currentPhase !== SoundsFishyPhase.SETUP) return false;
+    const state = room.soundsFishyState;
+
+    // Check if everyone has answered
+    const requiredAnswersCount = room.players.filter(p => p.socketId !== state.pickerId && p.connected !== false).length;
+    if (Object.keys(state.playerAnswers).length >= requiredAnswersCount && requiredAnswersCount > 0) {
+      // Transition to SUBMISSION/PITCH phase
+      state.currentPhase = SoundsFishyPhase.THE_PITCH;
+      return true;
+    }
+    return false;
+  }
+
   submitAnswer(room: RoomState, playerId: string, answer: string): RoomState | null {
     if (!room.soundsFishyState || room.soundsFishyState.currentPhase !== SoundsFishyPhase.SETUP) return null;
     const state = room.soundsFishyState;
@@ -106,12 +122,7 @@ export class SoundsFishyService {
       isRevealed: false
     };
 
-    // Check if everyone has answered
-    const requiredAnswersCount = room.players.length - 1; // Everyone minus the picker
-    if (Object.keys(state.playerAnswers).length === requiredAnswersCount) {
-      // Transition to SUBMISSION/PITCH phase
-      state.currentPhase = SoundsFishyPhase.THE_PITCH;
-    }
+    this.checkAnswerResolution(room);
 
     return room;
   }

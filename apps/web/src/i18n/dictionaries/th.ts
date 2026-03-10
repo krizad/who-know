@@ -10,6 +10,7 @@ export const th: Dictionary = {
     enterNameShort: "กรอกชื่อของคุณ",
     enterGame: "เข้าสู่เกม",
     createOwnRoom: "หรือสร้างห้องของคุณเอง",
+    returnToHome: "กลับหน้าหลัก",
     gameLobbyTitle: "GAME LOBBY",
     gameNames: {
       whoKnow: "Who Know!",

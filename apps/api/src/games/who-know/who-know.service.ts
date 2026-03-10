@@ -89,16 +89,13 @@ export class WhoKnowService {
     return room;
   }
 
-  submitVote(room: RoomState, voterId: string, targetId: string): RoomState | null {
-    if (room.status !== RoomStatus.VOTING) return null;
-
-    if (!room.votes) room.votes = {};
-    room.votes[voterId] = targetId;
+  checkVoteResolution(room: RoomState): boolean {
+    if (room.status !== RoomStatus.VOTING || !room.votes) return false;
 
     const playingCount = room.players.filter(p => p.role !== Role.Host && p.connected !== false).length;
     const votesCast = Object.keys(room.votes).length;
 
-    if (votesCast >= playingCount) {
+    if (votesCast >= playingCount && playingCount > 0) {
       room.status = RoomStatus.RESULT;
 
       const voteCounts = Object.values(room.votes).reduce((acc, votedForId) => {
@@ -124,13 +121,24 @@ export class WhoKnowService {
       if (isInsiderCaught) {
         room.winner = 'COMMONERS';
         room.players.forEach(p => {
-          if (p.role !== Role.Know) p.score += 1;
+          if (p.role !== Role.Know && p.role !== Role.Host) p.score += 1;
         });
       } else {
         room.winner = 'INSIDER';
         if (insider) insider.score += 2;
       }
+      return true;
     }
+    return false;
+  }
+
+  submitVote(room: RoomState, voterId: string, targetId: string): RoomState | null {
+    if (room.status !== RoomStatus.VOTING) return null;
+
+    if (!room.votes) room.votes = {};
+    room.votes[voterId] = targetId;
+
+    this.checkVoteResolution(room);
 
     return room;
   }

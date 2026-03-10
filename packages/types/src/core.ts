@@ -86,6 +86,7 @@ export interface RoomConfig {
   timerMin: number;
   rpsBestOf?: number; // e.g., 1, 3, 5
   rpsMode?: "1V1_ROUND_ROBIN" | "ALL_AT_ONCE";
+  language?: "en" | "th";
 }
 
 export interface RoomState {

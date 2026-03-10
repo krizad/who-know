@@ -36,7 +36,8 @@ export class GamesService {
         hostSelection: 'ROUND_ROBIN',
         timerMin: 5,
         rpsBestOf: 3,
-        rpsMode: '1V1_ROUND_ROBIN'
+        rpsMode: '1V1_ROUND_ROBIN',
+        language: 'th'
       }
     };
 
@@ -70,6 +71,7 @@ export class GamesService {
             { id: uuidv4(), side: "O", size: "SMALL" },
             { id: uuidv4(), side: "O", size: "MEDIUM" },
             { id: uuidv4(), side: "O", size: "MEDIUM" },
+            { id: uuidv4(), side: "O", size: "LARGE" },
             { id: uuidv4(), side: "O", size: "LARGE" },
           ],
         },
@@ -107,6 +109,73 @@ export class GamesService {
             room.votes![voterId] = user.socketId;
           }
         });
+      }
+
+      if (room.ticTacToeState) {
+        if (room.ticTacToeState.playerXId === oldSocketId) room.ticTacToeState.playerXId = user.socketId;
+        if (room.ticTacToeState.playerOId === oldSocketId) room.ticTacToeState.playerOId = user.socketId;
+      }
+
+      if (room.rpsState) {
+        const idx = room.rpsState.activePlayers.indexOf(oldSocketId);
+        if (idx !== -1) room.rpsState.activePlayers[idx] = user.socketId;
+        
+        const qIdx = room.rpsState.queue.indexOf(oldSocketId);
+        if (qIdx !== -1) room.rpsState.queue[qIdx] = user.socketId;
+        
+        if (room.rpsState.choices[oldSocketId]) {
+          room.rpsState.choices[user.socketId] = room.rpsState.choices[oldSocketId];
+          delete room.rpsState.choices[oldSocketId];
+        }
+        
+        if (room.rpsState.scores[oldSocketId] !== undefined) {
+          room.rpsState.scores[user.socketId] = room.rpsState.scores[oldSocketId];
+          delete room.rpsState.scores[oldSocketId];
+        }
+        
+        if (room.rpsState.gameWinner === oldSocketId) room.rpsState.gameWinner = user.socketId;
+        else if (Array.isArray(room.rpsState.gameWinner)) {
+          const wIdx = room.rpsState.gameWinner.indexOf(oldSocketId);
+          if (wIdx !== -1) room.rpsState.gameWinner[wIdx] = user.socketId;
+        }
+        
+        if (room.rpsState.roundWinner === oldSocketId) room.rpsState.roundWinner = user.socketId;
+        else if (Array.isArray(room.rpsState.roundWinner)) {
+          const wIdx = room.rpsState.roundWinner.indexOf(oldSocketId);
+          if (wIdx !== -1) room.rpsState.roundWinner[wIdx] = user.socketId;
+        }
+      }
+
+      if (room.gobblerState) {
+        if (room.gobblerState.playerXId === oldSocketId) room.gobblerState.playerXId = user.socketId;
+        if (room.gobblerState.playerOId === oldSocketId) room.gobblerState.playerOId = user.socketId;
+      }
+
+      if (room.soundsFishyState) {
+        if (room.soundsFishyState.pickerId === oldSocketId) room.soundsFishyState.pickerId = user.socketId;
+        if (room.soundsFishyState.blueFishId === oldSocketId) room.soundsFishyState.blueFishId = user.socketId;
+        
+        const rhIdx = room.soundsFishyState.redHerringIds.indexOf(oldSocketId);
+        if (rhIdx !== -1) room.soundsFishyState.redHerringIds[rhIdx] = user.socketId;
+        
+        const epIdx = room.soundsFishyState.eliminatedPlayers.indexOf(oldSocketId);
+        if (epIdx !== -1) room.soundsFishyState.eliminatedPlayers[epIdx] = user.socketId;
+        
+        if (room.soundsFishyState.playerAnswers[oldSocketId]) {
+          room.soundsFishyState.playerAnswers[user.socketId] = room.soundsFishyState.playerAnswers[oldSocketId];
+          room.soundsFishyState.playerAnswers[user.socketId].playerId = user.socketId;
+          delete room.soundsFishyState.playerAnswers[oldSocketId];
+        }
+        
+        if (room.soundsFishyState.roundPoints[oldSocketId] !== undefined) {
+          room.soundsFishyState.roundPoints[user.socketId] = room.soundsFishyState.roundPoints[oldSocketId];
+          delete room.soundsFishyState.roundPoints[oldSocketId];
+        }
+        
+        if (room.soundsFishyState.typingAnswers[oldSocketId]) {
+          room.soundsFishyState.typingAnswers[user.socketId] = room.soundsFishyState.typingAnswers[oldSocketId];
+          delete room.soundsFishyState.typingAnswers[oldSocketId];
+        }
       }
 
       // Migrate detectiveClubState references from old socketId to new socketId
@@ -156,6 +225,13 @@ export class GamesService {
           room.players.splice(playerIndex, 1);
         } else {
           room.players[playerIndex].connected = false;
+        }
+
+        if (room.gameType === GameType.WHO_KNOW && room.status === RoomStatus.VOTING) {
+          this.whoKnowService.checkVoteResolution(room);
+        }
+        if (room.gameType === GameType.SOUNDS_FISHY && room.status === RoomStatus.QUESTIONING) {
+          this.soundsFishyService.checkAnswerResolution(room);
         }
         
         const activePlayers = room.players.filter(p => p.connected !== false).length;

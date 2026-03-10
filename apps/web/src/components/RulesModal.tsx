@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { GameType } from "@repo/types";
 import { WhoKnowRules } from "./games/who-know/WhoKnowRules";
 import { TicTacToeRules } from "./games/tic-tac-toe/TicTacToeRules";
@@ -17,6 +17,7 @@ interface RulesModalProps {
 export function RulesModal({ defaultGameType, isGameRoom }: RulesModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<GameType | "LOBBY">(defaultGameType || "LOBBY");
+  const contentRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslate();
 
   // When defaultGameType changes, ensure tab updates if open
@@ -25,6 +26,13 @@ export function RulesModal({ defaultGameType, isGameRoom }: RulesModalProps) {
       setActiveTab(defaultGameType);
     }
   }, [defaultGameType, isOpen]);
+
+  // Scroll content to top when tab changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -59,7 +67,7 @@ export function RulesModal({ defaultGameType, isGameRoom }: RulesModalProps) {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 text-left">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-2 pt-4 sm:p-4 text-left overflow-y-auto">
           <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6 pb-2 border-b border-slate-800 flex justify-between items-center bg-slate-900 z-10 shrink-0">
               <h2 className="text-2xl font-black text-slate-100 uppercase tracking-widest flex items-center gap-3">
@@ -91,7 +99,7 @@ export function RulesModal({ defaultGameType, isGameRoom }: RulesModalProps) {
               </div>
             )}
 
-            <div className="p-6 overflow-y-auto text-slate-300 bg-slate-900/50 flex-1">
+            <div ref={contentRef} className="p-6 overflow-y-auto text-slate-300 bg-slate-900/50 flex-1">
               {renderContent()}
             </div>
 

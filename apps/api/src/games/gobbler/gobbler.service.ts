@@ -35,12 +35,16 @@ export class GobblerService {
     return room;
   }
 
-  private checkWin(board: GobblerPiece[][]): { winner: PlayerSide | null, line?: number[] } {
+  private checkWin(board: GobblerPiece[][]): { winner: PlayerSide | "DRAW" | null, line?: number[] } {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
       [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
       [0, 4, 8], [2, 4, 6]             // Diagonals
     ];
+
+    let xWins = false;
+    let oWins = false;
+    let winningLine: number[] | undefined;
 
     for (const [a, b, c] of lines) {
       const topA = board[a].length > 0 ? board[a].at(-1) : null;
@@ -48,9 +52,16 @@ export class GobblerService {
       const topC = board[c].length > 0 ? board[c].at(-1) : null;
 
       if (topA && topB && topC && topA.side === topB.side && topA.side === topC.side) {
-        return { winner: topA.side as PlayerSide, line: [a, b, c] };
+        if (topA.side === "X") xWins = true;
+        if (topA.side === "O") oWins = true;
+        if (!winningLine) winningLine = [a, b, c];
       }
     }
+
+    if (xWins && oWins) return { winner: "DRAW" };
+    if (xWins) return { winner: "X", line: winningLine };
+    if (oWins) return { winner: "O", line: winningLine };
+    
     return { winner: null };
   }
 
@@ -129,13 +140,15 @@ export class GobblerService {
       gb.winningLine = line;
       room.status = RoomStatus.RESULT;
       
-      const winnerPlayerId = winner === "X" ? gb.playerXId : gb.playerOId;
-      const winnerPlayer = room.players.find(p => p.socketId === winnerPlayerId);
-      if (winnerPlayer) winnerPlayer.score += 1;
-      
-      // Update Gobbler specific team scores
-      if (winner === "X") gb.scores.X += 1;
-      else if (winner === "O") gb.scores.O += 1;
+      if (winner !== "DRAW") {
+        const winnerPlayerId = winner === "X" ? gb.playerXId : gb.playerOId;
+        const winnerPlayer = room.players.find(p => p.socketId === winnerPlayerId);
+        if (winnerPlayer) winnerPlayer.score += 1;
+        
+        // Update Gobbler specific team scores
+        if (winner === "X") gb.scores.X += 1;
+        else if (winner === "O") gb.scores.O += 1;
+      }
     } else {
       gb.currentTurn = gb.currentTurn === "X" ? "O" : "X";
     }

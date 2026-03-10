@@ -8,6 +8,7 @@ export interface Dictionary {
     enterNameShort: string;
     enterGame: string;
     createOwnRoom: string;
+    returnToHome: string;
     gameLobbyTitle: string;
     gameNames: {
       whoKnow: string;
